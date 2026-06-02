@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дашборд адаптации — Life Pay</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+
+:root {
+  --bg:#f0f4f8; --card:#fff; --border:#e2e8f0; --text:#1e293b; --text2:#64748b;
+  --cov:#6366f1; --c3d:#8b5cf6; --c1m:#3b82f6; --cfin:#22c55e;
+  --green:#22c55e; --yellow:#f59e0b; --red:#ef4444; --teal:#14b8a6; --orange:#f97316;
+  --radius:14px; --shadow:0 2px 12px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:20px;font-weight:700;}.header p{font-size:12px;opacity:.8;margin-top:3px;}.logo{font-size:26px;font-weight:800;opacity:.85;}
+.filters{background:var(--card);border-bottom:1px solid var(--border);padding:9px 32px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.fl{display:flex;align-items:center;gap:7px;}.fl label{font-size:12px;color:var(--text2);font-weight:500;white-space:nowrap;}
+select{border:1px solid var(--border);border-radius:7px;padding:4px 9px;font-size:12px;color:var(--text);background:var(--card);cursor:pointer;outline:none;}
+select:focus{border-color:var(--cov);}
+#lastUpd{font-size:11px;color:#94a3b8;margin-left:auto;}
+.nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 32px;display:flex;}
+.ntab{padding:13px 20px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.ntab:hover{color:var(--text);}
+.ntab.active{border-bottom-color:var(--cov);color:var(--cov);}
+.ntab.t3d.active{border-bottom-color:var(--c3d);color:var(--c3d);}
+.ntab.t1m.active{border-bottom-color:var(--c1m);color:var(--c1m);}
+.ntab.tfin.active{border-bottom-color:var(--cfin);color:var(--cfin);}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:#f1f5f9;color:var(--text2);border-radius:10px;font-size:10px;font-weight:700;padding:1px 7px;}
+.ntab.active .badge{background:#ede9fe;color:var(--cov);}
+.ntab.t3d.active .badge{background:#f5f3ff;color:var(--c3d);}
+.ntab.t1m.active .badge{background:#eff6ff;color:var(--c1m);}
+.ntab.tfin.active .badge{background:#f0fdf4;color:var(--cfin);}
+.pane{display:none;padding:22px 32px;max-width:1400px;margin:0 auto;}.pane.on{display:block;}
+.sec{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;margin-top:6px;display:flex;align-items:center;gap:8px;}
+.sec-bar{display:block;width:4px;height:16px;border-radius:2px;flex-shrink:0;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px;}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;box-shadow:var(--shadow);}
+.ct{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.kbig{font-size:42px;font-weight:800;line-height:1;}.ksub{font-size:11px;color:var(--text2);margin-top:5px;}
+.enps-n{font-size:50px;font-weight:800;text-align:center;line-height:1;}
+.enps-d{font-size:11px;color:var(--text2);text-align:center;margin-top:4px;}
+.enps-bar{display:flex;height:9px;border-radius:5px;overflow:hidden;margin-top:10px;gap:2px;}
+.elig{display:flex;gap:10px;margin-top:7px;justify-content:center;flex-wrap:wrap;}
+.eld{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);}
+.eld-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.fi{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-radius:8px;margin-bottom:7px;}
+.fi-3{background:#f5f3ff;border-left:4px solid var(--c3d);}
+.fi-1{background:#eff6ff;border-left:4px solid var(--c1m);}
+.fi-f{background:#f0fdf4;border-left:4px solid var(--cfin);}
+.fi-lbl{font-size:12px;font-weight:600;}.fi-sub{font-size:10px;color:var(--text2);}.fi-cnt{font-size:26px;font-weight:800;}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.sr:last-child{border-bottom:none;}
+.sr-n{font-size:12px;color:var(--text);font-weight:500;}.sr-s{font-size:10px;color:var(--text2);}
+.sr-v{font-size:20px;font-weight:800;}.sr-st{font-size:10px;color:#f59e0b;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mi{text-align:center;padding:11px 7px;background:#f8fafc;border-radius:10px;}
+.mv{font-size:22px;font-weight:800;}.ml{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.3;}
+.cw canvas{max-height:205px;}
+.ctabs{display:flex;gap:3px;margin-bottom:8px;background:#f8fafc;border-radius:7px;padding:3px;}
+.ct2{padding:4px 9px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text2);border:none;background:none;}
+.ct2.on{background:white;color:var(--cov);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.clist{max-height:250px;overflow-y:auto;}
+.ci{padding:8px 10px;border-radius:7px;background:#f8fafc;border:1px solid var(--border);margin-bottom:6px;font-size:11px;line-height:1.55;color:var(--text);}
+.cm{font-size:9px;color:var(--text2);margin-bottom:3px;}
+.clist::-webkit-scrollbar{width:3px;}
+.clist::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+@media(max-width:900px){
+  .g4{grid-template-columns:repeat(2,1fr);}
+  .g3,.g2{grid-template-columns:1fr;}
+  .pane,.header,.filters,.nav{padding-left:16px;padding-right:16px;}
+  .ntab{padding:11px 12px;font-size:12px;}
+}
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div><h1>Аналитика адаптации сотрудников</h1><p>Life Pay · Опросы на 3 дня, 1 месяц и 2.5 месяца</p></div>
+  <div class="logo">LP</div>
+</div>
+<div class="filters">
+  <div class="fl"><label>📅 Месяц:</label>
+    <select id="fMonth">
+      <option value="ALL">Все месяцы</option>
+      <option value="2026-01">Январь 2026</option>
+      <option value="2026-02">Февраль 2026</option>
+      <option value="2026-03">Март 2026</option>
+      <option value="2026-04">Апрель 2026</option>
+      <option value="2026-05">Май 2026</option>
+    </select>
+  </div>
+  <div style="width:1px;height:22px;background:var(--border)"></div>
+  <div class="fl"><label>🏢 Подразделение:</label>
+    <select id="fDept"><option value="ALL">Все</option>
+      <option value="Backoffice">Backoffice</option>
+      <option value="Core Merchants Services & Operations">Core Merchants Services & Operations</option>
+      <option value="Infrustructure">Infrustructure</option>
+      <option value="ML & AI">ML & AI</option>
+      <option value="Бухгалтерия">Бухгалтерия</option>
+      <option value="Группа микро бизнеса">Группа микро бизнеса</option>
+      <option value="Группа продаж клиентам Альфабанк 2">Группа продаж клиентам Альфабанк 2</option>
+      <option value="Департамент клиентского сервиса">Департамент клиентского сервиса</option>
+      <option value="Департамент по работе с персоналом">Департамент по работе с персоналом</option>
+      <option value="Департамент развития продукта RUSSIA">Департамент развития продукта RUSSIA</option>
+      <option value="Направление кадрового делопроизводства">Направление кадрового делопроизводства</option>
+      <option value="Направление разработки Payments">Направление разработки Payments</option>
+      <option value="Направление финансового анализа и планирования">Направление финансового анализа и планирования</option>
+      <option value="Отдел дизайна">Отдел дизайна</option>
+      <option value="Отдел логистики">Отдел логистики</option>
+      <option value="Отдел обучения персонала">Отдел обучения персонала</option>
+      <option value="Отдел по развитию партнерских продаж">Отдел по развитию партнерских продаж</option>
+      <option value="Отдел разработки Fortis CRM (MENA)">Отдел разработки Fortis CRM (MENA)</option>
+      <option value="Отдел разработки Fortis POS (MENA)">Отдел разработки Fortis POS (MENA)</option>
+      <option value="Отдел разработки Industry Solutions (MENA)">Отдел разработки Industry Solutions (MENA)</option>
+      <option value="Отдел разработки TMS (Russia)">Отдел разработки TMS (Russia)</option>
+      <option value="Отдел системного администрирования">Отдел системного администрирования</option>
+      <option value="Отдел сопровождение клиентов">Отдел сопровождение клиентов</option>
+      <option value="Проектный офис">Проектный офис</option>
+      <option value="Уволенные сотрудники">Уволенные сотрудники</option>
+      <option value="Юридический отдел">Юридический отдел</option>
+    </select>
+  </div>
+  <span id="lastUpd">Обновлено: 01.06.2026</span>
+</div>
+<div class="nav">
+  <button class="ntab tov active" onclick="go('ov',this)">📊 Обзор</button>
+  <button class="ntab t3d" onclick="go('3d',this)">🌱 Опрос 3 дня <span class="badge" id="b3d">—</span></button>
+  <button class="ntab t1m" onclick="go('1m',this)">📈 Опрос 1 месяц <span class="badge" id="b1m">—</span></button>
+  <button class="ntab tfin" onclick="go('fin',this)">🏁 Финальный 2.5 мес <span class="badge" id="bfin">—</span></button>
+</div>
+
+<!-- ОБЗОР -->
+<div class="pane on" id="p-ov">
+  <div class="sec"><span class="sec-bar" style="background:var(--cov)"></span>Ключевые показатели по всем этапам</div>
+  <div class="g4">
+    <div class="card">
+      <div class="ct">eNPS (финальный опрос)</div>
+      <div class="enps-n" id="ovENPS" style="color:var(--cov)">—</div>
+      <div class="enps-d" id="ovENPSD"></div>
+      <div class="enps-bar" id="ovENPSB"></div>
+      <div class="elig">
+        <div class="eld"><div class="eld-dot" style="background:var(--green)"></div>Промоутеры</div>
+        <div class="eld"><div class="eld-dot" style="background:var(--yellow)"></div>Нейтр.</div>
+        <div class="eld"><div class="eld-dot" style="background:var(--red)"></div>Детракт.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Прошли опросы</div>
+      <div class="fi fi-3"><div><div class="fi-lbl">Опрос 3 дня</div><div class="fi-sub">Первые впечатления</div></div><div class="fi-cnt" id="ovC3d">—</div></div>
+      <div class="fi fi-1"><div><div class="fi-lbl">Опрос 1 месяц</div><div class="fi-sub">В процессе адаптации</div></div><div class="fi-cnt" id="ovC1m">—</div></div>
+      <div class="fi fi-f"><div><div class="fi-lbl">Финальный опрос</div><div class="fi-sub">Завершение 2.5 мес</div></div><div class="fi-cnt" id="ovCFin">—</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Нравится работать в компании</div>
+      <div class="sr">
+        <div><div class="sr-n">3 дня</div><div class="sr-s" style="color:#a78bfa">Первые впечатления</div></div>
+        <div style="text-align:right"><div class="sr-v" id="ovS3d" style="color:var(--c3d)">—</div><div class="sr-st" id="ovSt3d"></div></div>
+      </div>
+      <div class="sr">
+        <div><div class="sr-n">1 месяц</div><div class="sr-s" style="color:#60a5fa">Середина испытательного</div></div>
+        <div style="text-align:right"><div class="sr-v" id="ovS1m" style="color:var(--c1m)">—</div><div class="sr-st" id="ovSt1m"></div></div>
+      </div>
+      <div class="sr">
+        <div><div class="sr-n">Финал 2.5 мес</div><div class="sr-s" style="color:#4ade80">Завершение адаптации</div></div>
+        <div style="text-align:right"><div class="sr-v" id="ovSFin" style="color:var(--cfin)">—</div><div class="sr-st" id="ovStFin"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Финальные оценки (2.5 мес)</div>
+      <div class="mg">
+        <div class="mi"><div class="mv" id="ovOnb" style="color:var(--cov)">—</div><div class="ml">Адаптация в целом</div></div>
+        <div class="mi"><div class="mv" id="ovJob" style="color:var(--teal)">—</div><div class="ml">Рабочие обязанности</div></div>
+        <div class="mi"><div class="mv" id="ovTeam" style="color:var(--c1m)">—</div><div class="ml">Часть команды (из 5)</div></div>
+        <div class="mi"><div class="mv" id="ovExp" style="color:var(--orange)">—</div><div class="ml">Ожидания vs реальность</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">📈 Динамика eNPS по месяцам</div><div class="cw"><canvas id="cENPS"></canvas></div></div>
+    <div class="card"><div class="ct">😊 Удовлетворённость компанией — все три этапа</div><div class="cw"><canvas id="cSat"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">👥 Количество прошедших опросы по месяцам</div><div class="cw"><canvas id="cPart"></canvas></div></div>
+    <div class="card"><div class="ct">🎯 Ключевые метрики финального опроса по месяцам</div><div class="cw"><canvas id="cFinMet"></canvas></div></div>
+  </div>
+</div>
+
+<!-- 3 ДНЯ -->
+<div class="pane" id="p-3d">
+  <div class="sec"><span class="sec-bar" style="background:var(--c3d)"></span>Опрос «Первые шаги в компании» — 3 рабочих дня</div>
+  <div class="g4">
+    <div class="card"><div class="ct">Прошли опрос</div><div class="kbig" id="k3dN" style="color:var(--c3d)">—</div><div class="ksub">сотрудников</div></div>
+    <div class="card"><div class="ct">Нравится компания (из 10)</div><div class="kbig" id="k3dSat" style="color:var(--c3d)">—</div><div class="ksub" id="k3dSatSt"></div></div>
+    <div class="card"><div class="ct">Встреча с руководителем</div><div id="k3dMeet" style="margin-top:4px">—</div></div>
+    <div class="card"><div class="ct">Задачи понятны</div><div id="k3dTask" style="margin-top:4px">—</div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">🤝 Состоялась встреча с руководителем?</div><div class="cw"><canvas id="c3dMeet"></canvas></div></div>
+    <div class="card"><div class="ct">✅ Понятны задачи на ближайшее время?</div><div class="cw"><canvas id="c3dTask"></canvas></div></div>
+    <div class="card"><div class="ct">📚 Знает, с какими документами знакомиться?</div><div class="cw"><canvas id="c3dDocs"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">📈 Удовлетворённость компанией по месяцам</div><div class="cw"><canvas id="c3dSatT"></canvas></div></div>
+    <div class="card">
+      <div class="ct">💬 Оценка участия руководителя в адаптации</div>
+      <div class="ctabs" id="tab3dMgr">
+        <button class="ct2 on" onclick="rc('manager_3d','ALL',this,'tab3dMgr','cl3dMgr')">Все</button>
+        <button class="ct2" onclick="rc('manager_3d','2026-01',this,'tab3dMgr','cl3dMgr')">Янв</button>
+        <button class="ct2" onclick="rc('manager_3d','2026-02',this,'tab3dMgr','cl3dMgr')">Фев</button>
+        <button class="ct2" onclick="rc('manager_3d','2026-03',this,'tab3dMgr','cl3dMgr')">Мар</button>
+        <button class="ct2" onclick="rc('manager_3d','2026-04',this,'tab3dMgr','cl3dMgr')">Апр</button>
+        <button class="ct2" onclick="rc('manager_3d','2026-05',this,'tab3dMgr','cl3dMgr')">Май</button>
+      </div>
+      <div class="clist" id="cl3dMgr"></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">💬 Общие комментарии (первые впечатления)</div>
+      <div class="ctabs" id="tab3dComm">
+        <button class="ct2 on" onclick="rc('comments_3d','ALL',this,'tab3dComm','cl3dComm')">Все</button>
+        <button class="ct2" onclick="rc('comments_3d','2026-01',this,'tab3dComm','cl3dComm')">Янв</button>
+        <button class="ct2" onclick="rc('comments_3d','2026-02',this,'tab3dComm','cl3dComm')">Фев</button>
+        <button class="ct2" onclick="rc('comments_3d','2026-03',this,'tab3dComm','cl3dComm')">Мар</button>
+        <button class="ct2" onclick="rc('comments_3d','2026-04',this,'tab3dComm','cl3dComm')">Апр</button>
+        <button class="ct2" onclick="rc('comments_3d','2026-05',this,'tab3dComm','cl3dComm')">Май</button>
+      </div>
+      <div class="clist" id="cl3dComm"></div>
+    </div>
+    <div class="card" style="background:#f8fafc;border:1px dashed var(--c3d);display:flex;align-items:center;justify-content:center;text-align:center;color:var(--text2);font-size:13px;padding:24px;">
+      <div>
+        <div style="font-size:36px;margin-bottom:10px;">🌱</div>
+        <div style="font-weight:700;color:var(--c3d);font-size:14px;">Опрос 3 рабочих дня</div>
+        <div style="font-size:12px;margin-top:8px;line-height:1.6">Оценивает первые впечатления:<br>встречу с руководителем,<br>понимание задач и документов</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1 МЕСЯЦ -->
+<div class="pane" id="p-1m">
+  <div class="sec"><span class="sec-bar" style="background:var(--c1m)"></span>Опрос «Как идёт твоя адаптация?» — 1 месяц</div>
+  <div class="g4">
+    <div class="card"><div class="ct">Прошли опрос</div><div class="kbig" id="k1mN" style="color:var(--c1m)">—</div><div class="ksub">сотрудников</div></div>
+    <div class="card"><div class="ct">Нравится компания (из 10)</div><div class="kbig" id="k1mSat" style="color:var(--c1m)">—</div><div class="ksub" id="k1mSatSt"></div></div>
+    <div class="card"><div class="ct">Бадди (из 10)</div><div class="kbig" id="k1mBud" style="color:var(--c1m)">—</div><div class="ksub" id="k1mBudSt"></div></div>
+    <div class="card"><div class="ct">Курсы адаптации (из 10)</div><div class="kbig" id="k1mCrs" style="color:var(--c1m)">—</div><div class="ksub" id="k1mCrsSt"></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">🎯 Установлены цели на испытательный?</div><div class="cw"><canvas id="c1mGoals"></canvas></div></div>
+    <div class="card"><div class="ct">⏰ Справляется с объёмом задач?</div><div class="cw"><canvas id="c1mTasks"></canvas></div></div>
+    <div class="card"><div class="ct">🧭 Знает, куда обратиться с вопросами?</div><div class="cw"><canvas id="c1mCont"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">💬 Получает обратную связь?</div><div class="cw"><canvas id="c1mFb"></canvas></div></div>
+    <div class="card"><div class="ct">🗓 1-on-1 встречи с руководителем?</div><div class="cw"><canvas id="c1m1on1"></canvas></div></div>
+    <div class="card"><div class="ct">🤝 Состоялась встреча с командой?</div><div class="cw"><canvas id="c1mMeet"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">📈 Оценка бадди и полезности курсов по месяцам</div><div class="cw"><canvas id="c1mBC"></canvas></div></div>
+    <div class="card"><div class="ct">😊 Удовлетворённость компанией по месяцам</div><div class="cw"><canvas id="c1mSatT"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ct">💬 Что добавить / убрать из курсов адаптации</div>
+      <div class="ctabs" id="tab1mCrs">
+        <button class="ct2 on" onclick="rc('add_remove_1m','ALL',this,'tab1mCrs','cl1mCrs')">Все</button>
+        <button class="ct2" onclick="rc('add_remove_1m','2026-01',this,'tab1mCrs','cl1mCrs')">Янв</button>
+        <button class="ct2" onclick="rc('add_remove_1m','2026-02',this,'tab1mCrs','cl1mCrs')">Фев</button>
+        <button class="ct2" onclick="rc('add_remove_1m','2026-03',this,'tab1mCrs','cl1mCrs')">Мар</button>
+        <button class="ct2" onclick="rc('add_remove_1m','2026-04',this,'tab1mCrs','cl1mCrs')">Апр</button>
+      </div>
+      <div class="clist" id="cl1mCrs"></div>
+    </div>
+    <div class="card">
+      <div class="ct">⚠️ Сложности в процессе адаптации</div>
+      <div class="ctabs" id="tab1mDiff">
+        <button class="ct2 on" onclick="rc('difficulties_1m','ALL',this,'tab1mDiff','cl1mDiff')">Все</button>
+        <button class="ct2" onclick="rc('difficulties_1m','2026-01',this,'tab1mDiff','cl1mDiff')">Янв</button>
+        <button class="ct2" onclick="rc('difficulties_1m','2026-02',this,'tab1mDiff','cl1mDiff')">Фев</button>
+        <button class="ct2" onclick="rc('difficulties_1m','2026-03',this,'tab1mDiff','cl1mDiff')">Мар</button>
+        <button class="ct2" onclick="rc('difficulties_1m','2026-04',this,'tab1mDiff','cl1mDiff')">Апр</button>
+      </div>
+      <div class="clist" id="cl1mDiff"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ФИНАЛ -->
+<div class="pane" id="p-fin">
+  <div class="sec"><span class="sec-bar" style="background:var(--cfin)"></span>Финальный опрос по адаптации — 2.5 месяца</div>
+  <div class="g4">
+    <div class="card">
+      <div class="ct">eNPS</div>
+      <div class="enps-n" id="fENPS" style="color:var(--cfin)">—</div>
+      <div class="enps-d" id="fENPSD"></div>
+      <div class="enps-bar" id="fENPSB"></div>
+      <div class="elig">
+        <div class="eld"><div class="eld-dot" style="background:var(--green)"></div>Промоутеры</div>
+        <div class="eld"><div class="eld-dot" style="background:var(--yellow)"></div>Нейтр.</div>
+        <div class="eld"><div class="eld-dot" style="background:var(--red)"></div>Детракт.</div>
+      </div>
+    </div>
+    <div class="card"><div class="ct">Прошли опрос</div><div class="kbig" id="kFinN" style="color:var(--cfin)">—</div><div class="ksub">сотрудников</div></div>
+    <div class="card"><div class="ct">Нравится компания (из 10)</div><div class="kbig" id="kFinSat" style="color:var(--cfin)">—</div><div class="ksub" id="kFinSatSt"></div></div>
+    <div class="card"><div class="ct">Удовл. адаптацией (из 10)</div><div class="kbig" id="kFinOnb" style="color:var(--cfin)">—</div><div class="ksub" id="kFinOnbSt"></div></div>
+  </div>
+  <div class="g4">
+    <div class="card"><div class="ct">Рабочие обязанности (из 10)</div><div class="kbig" id="kFinJob" style="color:var(--teal)">—</div><div class="ksub" id="kFinJobSt"></div></div>
+    <div class="card"><div class="ct">Часть команды (из 5)</div><div class="kbig" id="kFinTeam" style="color:var(--c1m)">—</div><div class="ksub" id="kFinTeamSt" style="font-size:14px;color:#f59e0b;"></div></div>
+    <div class="card"><div class="ct">Ожидания vs реальность (из 10)</div><div class="kbig" id="kFinExp" style="color:var(--orange)">—</div><div class="ksub" id="kFinExpSt"></div></div>
+    <div class="card"><div class="ct">Техника и ПО (из 10)</div><div class="kbig" id="kFinTech" style="color:#8b5cf6">—</div><div class="ksub" id="kFinTechSt"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">📈 Динамика eNPS по месяцам</div><div class="cw"><canvas id="cFinENPS"></canvas></div></div>
+    <div class="card"><div class="ct">📊 Все ключевые оценки по месяцам</div><div class="cw"><canvas id="cFinScores"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">⏰ Справляется с задачами в срок?</div><div class="cw"><canvas id="cFinTask"></canvas></div></div>
+    <div class="card"><div class="ct">💬 Получает обратную связь?</div><div class="cw"><canvas id="cFinFb"></canvas></div></div>
+    <div class="card"><div class="ct">🗓 1-on-1 встречи с руководителем?</div><div class="cw"><canvas id="cFin1on1"></canvas></div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="ct">🧭 Знает, куда обратиться с вопросами?</div><div class="cw"><canvas id="cFinCont"></canvas></div></div>
+    <div class="card"><div class="ct">🤝 Комфортно взаимодействовать с руководителем?</div><div class="cw"><canvas id="cFinMgr"></canvas></div></div>
+    <div class="card"><div class="ct">🤖 Динамика оценки бадди (1мес vs финал)</div><div class="cw"><canvas id="cFinBud"></canvas></div></div>
+  </div>
+  <div class="sec" style="margin-top:8px"><span class="sec-bar" style="background:var(--cfin)"></span>Открытые ответы сотрудников</div>
+  <div class="g3">
+    <div class="card">
+      <div class="ct">💡 Что помогло адаптироваться</div>
+      <div class="ctabs" id="tabHelped">
+        <button class="ct2 on" onclick="rc('what_helped','ALL',this,'tabHelped','clHelped')">Все</button>
+        <button class="ct2" onclick="rc('what_helped','2026-01',this,'tabHelped','clHelped')">Янв</button>
+        <button class="ct2" onclick="rc('what_helped','2026-02',this,'tabHelped','clHelped')">Фев</button>
+        <button class="ct2" onclick="rc('what_helped','2026-03',this,'tabHelped','clHelped')">Мар</button>
+        <button class="ct2" onclick="rc('what_helped','2026-04',this,'tabHelped','clHelped')">Апр</button>
+        <button class="ct2" onclick="rc('what_helped','2026-05',this,'tabHelped','clHelped')">Май</button>
+      </div>
+      <div class="clist" id="clHelped"></div>
+    </div>
+    <div class="card">
+      <div class="ct">⚠️ Что мешало в работе</div>
+      <div class="ctabs" id="tabObst">
+        <button class="ct2 on" onclick="rc('obstacles','ALL',this,'tabObst','clObst')">Все</button>
+        <button class="ct2" onclick="rc('obstacles','2026-01',this,'tabObst','clObst')">Янв</button>
+        <button class="ct2" onclick="rc('obstacles','2026-02',this,'tabObst','clObst')">Фев</button>
+        <button class="ct2" onclick="rc('obstacles','2026-03',this,'tabObst','clObst')">Мар</button>
+        <button class="ct2" onclick="rc('obstacles','2026-04',this,'tabObst','clObst')">Апр</button>
+        <button class="ct2" onclick="rc('obstacles','2026-05',this,'tabObst','clObst')">Май</button>
+      </div>
+      <div class="clist" id="clObst"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🔄 Непонятные / лишние процессы</div>
+      <div class="ctabs" id="tabProc">
+        <button class="ct2 on" onclick="rc('extra_proc','ALL',this,'tabProc','clProc')">Все</button>
+        <button class="ct2" onclick="rc('extra_proc','2026-01',this,'tabProc','clProc')">Янв</button>
+        <button class="ct2" onclick="rc('extra_proc','2026-02',this,'tabProc','clProc')">Фев</button>
+        <button class="ct2" onclick="rc('extra_proc','2026-03',this,'tabProc','clProc')">Мар</button>
+        <button class="ct2" onclick="rc('extra_proc','2026-04',this,'tabProc','clProc')">Апр</button>
+        <button class="ct2" onclick="rc('extra_proc','2026-05',this,'tabProc','clProc')">Май</button>
+      </div>
+      <div class="clist" id="clProc"></div>
+    </div>
+  </div>
+</div>
+<div style="height:32px"></div>
+<script>
+
+const D={"months": ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05"], "month_labels": {"2026-01": "Янв 2026", "2026-02": "Фев 2026", "2026-03": "Мар 2026", "2026-04": "Апр 2026", "2026-05": "Май 2026"}, "departments": ["Backoffice", "Core Merchants Services & Operations", "Infrustructure", "ML & AI", "Бухгалтерия", "Группа микро бизнеса", "Группа продаж клиентам Альфабанк 2", "Департамент клиентского сервиса", "Департамент по работе с персоналом", "Департамент развития продукта RUSSIA", "Направление кадрового делопроизводства", "Направление разработки Payments", "Направление финансового анализа и планирования", "Отдел дизайна", "Отдел логистики", "Отдел обучения персонала", "Отдел по развитию партнерских продаж", "Отдел разработки Fortis CRM (MENA)", "Отдел разработки Fortis POS (MENA)", "Отдел разработки Industry Solutions (MENA)", "Отдел разработки TMS (Russia)", "Отдел системного администрирования", "Отдел сопровождение клиентов", "Проектный офис", "Уволенные сотрудники", "Юридический отдел"], "respondents": {"3_days": {"2026-02": {"Core Merchants Services & Operations": 1, "ALL": 7, "Infrustructure": 1, "Отдел разработки Fortis CRM (MENA)": 1, "ML & AI": 2, "Направление финансового анализа и планирования": 1, "Отдел разработки Industry Solutions (MENA)": 1}, "2026-03": {"Отдел разработки Fortis POS (MENA)": 1, "ALL": 7, "Проектный офис": 1, "Направление разработки Payments": 2, "ML & AI": 2, "Отдел разработки Fortis CRM (MENA)": 1}, "2026-05": {"Отдел по развитию партнерских продаж": 2, "ALL": 5, "Департамент развития продукта RUSSIA": 1, "Отдел системного администрирования": 1, "ML & AI": 1}, "2026-04": {"Отдел дизайна": 1, "ALL": 6, "ML & AI": 2, "Направление разработки Payments": 1, "Бухгалтерия": 1, "Группа микро бизнеса": 1}, "2026-01": {"Отдел разработки TMS (Russia)": 1, "ALL": 3, "ML & AI": 1, "Отдел по развитию партнерских продаж": 1}}, "1_month": {"2026-03": {"Core Merchants Services & Operations": 1, "ALL": 8, "Infrustructure": 1, "Отдел разработки Fortis CRM (MENA)": 1, "ML & AI": 2, "Направление финансового анализа и планирования": 1, "Направление разработки Payments": 1, "Отдел разработки Industry Solutions (MENA)": 1}, "2026-04": {"Отдел разработки Fortis POS (MENA)": 1, "ALL": 8, "Отдел дизайна": 1, "Направление разработки Payments": 2, "ML & AI": 1, "Отдел разработки Fortis CRM (MENA)": 1, "Бухгалтерия": 1, "Группа микро бизнеса": 1}, "2026-02": {"Отдел разработки TMS (Russia)": 1, "ALL": 3, "ML & AI": 1, "Отдел по развитию партнерских продаж": 1}, "2026-01": {"Отдел логистики": 1, "ALL": 6, "Департамент по работе с персоналом": 1, "Юридический отдел": 1, "Уволенные сотрудники": 1, "Core Merchants Services & Operations": 1, "Отдел разработки Industry Solutions (MENA)": 1}, "2026-05": {"ML & AI": 3, "ALL": 3}}, "final": {"2026-02": {"Департамент клиентского сервиса": 1, "ALL": 9, "Департамент по работе с персоналом": 3, "Направление кадрового делопроизводства": 1, "Отдел дизайна": 1, "Core Merchants Services & Operations": 1, "Отдел сопровождение клиентов": 1, "Отдел разработки Industry Solutions (MENA)": 1}, "2026-04": {"Core Merchants Services & Operations": 1, "ALL": 3, "Отдел разработки TMS (Russia)": 1, "Отдел по развитию партнерских продаж": 1}, "2026-05": {"Отдел разработки Fortis POS (MENA)": 1, "ALL": 9, "Infrustructure": 1, "Отдел разработки Fortis CRM (MENA)": 2, "ML & AI": 2, "Направление финансового анализа и планирования": 1, "Направление разработки Payments": 1, "Отдел разработки Industry Solutions (MENA)": 1}, "2026-03": {"Отдел логистики": 1, "ALL": 3, "Юридический отдел": 1, "ML & AI": 1}, "2026-01": {"Направление разработки Payments": 1, "ALL": 5, "Группа продаж клиентам Альфабанк 2": 1, "Отдел обучения персонала": 1, "Backoffice": 1, "Юридический отдел": 1}}}, "enps_series": {"2026-02": {"enps": 89, "promoters": 8, "neutrals": 1, "detractors": 0, "total": 9}, "2026-04": {"enps": 100, "promoters": 3, "neutrals": 0, "detractors": 0, "total": 3}, "2026-05": {"enps": 78, "promoters": 7, "neutrals": 2, "detractors": 0, "total": 9}, "2026-03": {"enps": 67, "promoters": 2, "neutrals": 1, "detractors": 0, "total": 3}, "2026-01": {"enps": 60, "promoters": 4, "neutrals": 0, "detractors": 1, "total": 5}}, "scores": {"satisfaction_3d": {"2026-02": 9.3, "2026-03": 9.6, "2026-05": 9.8, "2026-04": 8.8, "2026-01": 10.0}, "courses_1m": {"2026-03": 8.5, "2026-04": 8.6, "2026-02": 10.0, "2026-01": 8.7, "2026-05": 8.3}, "buddy_1m": {"2026-03": 8.9, "2026-04": 8.8, "2026-02": 10.0, "2026-01": 8.8, "2026-05": 4.7}, "satisfaction_1m": {"2026-03": 9.5, "2026-04": 9.2, "2026-02": 10.0, "2026-01": 9.7, "2026-05": 9.0}, "onboarding_score": {"2026-02": 9.4, "2026-04": 10.0, "2026-05": 9.3, "2026-03": 9.7, "2026-01": 8.6}, "tech_mastery": {"2026-02": 9.2, "2026-04": 9.3, "2026-05": 9.4, "2026-03": 9.3, "2026-01": 8.2}, "job_satisfaction": {"2026-02": 9.6, "2026-04": 10.0, "2026-05": 9.4, "2026-03": 9.7, "2026-01": 8.4}, "team_feel": {"2026-02": 4.8, "2026-04": 4.7, "2026-05": 5.0, "2026-03": 5.0, "2026-01": 4.6}, "expectations": {"2026-02": 9.8, "2026-04": 10.0, "2026-05": 9.7, "2026-03": 10.0, "2026-01": 8.8}, "buddy_fin": {"2026-02": 7.9, "2026-04": 9.7, "2026-05": 10.0, "2026-03": 8.3, "2026-01": 8.4}, "satisfaction_fin": {"2026-02": 9.7, "2026-04": 10.0, "2026-05": 9.6, "2026-03": 10.0, "2026-01": 9.0}}, "choices": {"manager_meeting_3d": {"2026-02": {"Запланировали её": 2, "Да": 5}, "2026-03": {"Да": 6, "Запланировали её": 1}, "2026-05": {"Да": 4, "Запланировали её": 1}, "2026-04": {"Да": 4, "Частично": 1, "Запланировали её": 1}, "2026-01": {"Да": 2, "Запланировали её": 1}}, "docs_known_3d": {"2026-02": {"Да": 7}, "2026-03": {"Да": 7}, "2026-05": {"Да": 5}, "2026-04": {"Да": 6}, "2026-01": {"Да": 3}}, "tasks_clear_3d": {"2026-02": {"Да": 5, "В целом понятны": 2}, "2026-03": {"Да": 6, "В целом понятны": 1}, "2026-05": {"Да": 4, "В целом понятны": 1}, "2026-04": {"В целом понятны": 2, "Да": 4}, "2026-01": {"Да": 2, "В целом понятны": 1}}, "meeting_1m": {"2026-03": {"Да": 7, "Частично": 1}, "2026-04": {"Да": 8}, "2026-02": {"Да": 3}, "2026-01": {"Да": 6}, "2026-05": {"Да": 3}}, "goals_set_1m": {"2026-03": {"Да, я хорошо понимаю как меня будут оценивать по результатам испытательного срока": 5, "В целом понятно что нужно сделать": 3}, "2026-04": {"Да, я хорошо понимаю как меня будут оценивать по результатам испытательного срока": 8}, "2026-02": {"Да, я хорошо понимаю как меня будут оценивать по результатам испытательного срока": 3}, "2026-01": {"В целом понятно что нужно сделать": 1, "Да, я хорошо понимаю как меня будут оценивать по результатам испытательного срока": 3, "Запланировали встречу с руководителем на эту тему": 2}, "2026-05": {"В целом понятно что нужно сделать": 1, "Да, я хорошо понимаю как меня будут оценивать по результатам испытательного срока": 2}}, "tasks_on_time_1m": {"2026-03": {"Да": 6, "Скорее да": 2}, "2026-04": {"Да": 7, "Скорее да": 1}, "2026-02": {"Да": 2, "Скорее да": 1}, "2026-01": {"Да": 5, "Скорее нет": 1}, "2026-05": {"Скорее да": 2, "Да": 1}}, "1on1_1m": {"2026-03": {"Нет": 2, "Да": 6}, "2026-04": {"Да": 8}, "2026-02": {"Да": 3}, "2026-01": {"Нет": 1, "Да": 5}, "2026-05": {"Нет": 1, "Да": 2}}, "feedback_1m": {"2026-03": {"Да": 7, "Да, но хотелось бы чаще": 1}, "2026-04": {"Да": 6, "Нет": 1, "Да, но хотелось бы чаще": 1}, "2026-02": {"Да": 3}, "2026-01": {"Да": 6}, "2026-05": {"Да": 3}}, "knows_contacts_1m": {"2026-03": {"Только по своему направлению работы": 1, "Да": 6, "Не уверен(а), что прямо на любые вопросы, но на большинство смогу": 1}, "2026-04": {"Да": 5, "Не уверен(а), что прямо на любые вопросы, но на большинство смогу": 3}, "2026-02": {"Да": 2, "Не уверен(а), что прямо на любые вопросы, но на большинство смогу": 1}, "2026-01": {"Да": 4, "Не уверен(а), что прямо на любые вопросы, но на большинство смогу": 2}, "2026-05": {"Да": 1, "Не уверен(а), что прямо на любые вопросы, но на большинство смогу": 2}}, "feedback_fin": {"2026-02": {"Да": 9}, "2026-04": {"Да": 3}, "2026-05": {"Да": 9}, "2026-03": {"Да": 3}, "2026-01": {"Да": 4, "Нет": 1}}, "knows_contacts_fin": {"2026-02": {"Не уверен(а), что прямо любые вопросы, но на большинство смогу": 5, "Да": 4}, "2026-04": {"Не уверен(а), что прямо любые вопросы, но на большинство смогу": 1, "Да": 2}, "2026-05": {"Да": 8, "Не уверен(а), что прямо любые вопросы, но на большинство смогу": 1}, "2026-03": {"Не уверен(а), что прямо любые вопросы, но на большинство смогу": 1, "Да": 2}, "2026-01": {"Да": 2, "Не уверен(а), что прямо любые вопросы, но на большинство смогу": 2, "Только по своему направлению работы": 1}}, "manager_comfort_fin": {"2026-02": {"Да": 9}, "2026-04": {"Да": 3}, "2026-05": {"Да": 9}, "2026-03": {"Да": 3}, "2026-01": {"Да": 5}}, "1on1_fin": {"2026-02": {"Да": 8, "Да, но хотелось бы чаще": 1}, "2026-04": {"Да": 3}, "2026-05": {"Да": 9}, "2026-03": {"Да": 3}, "2026-01": {"Да": 3, "Нет": 2}}, "tasks_on_time_fin": {"2026-02": {"Скорее да": 2, "Да": 7}, "2026-04": {"Да": 3}, "2026-05": {"Да": 6, "Скорее да": 3}, "2026-03": {"Да": 3}, "2026-01": {"Скорее да": 2, "Да": 2, "Нет": 1}}}, "open_answers": {"manager_3d": [{"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "всё отлично, знакомство с командой было произведено ещё на тимфите, в первые дни были даны вводные по процессами и контактам для вопросов и решения проблем"}, {"month": "2026-03", "dept": "Отдел разработки Fortis POS (MENA)", "text": "Полное участие. Руководитель погружает во все процессы"}, {"month": "2026-05", "dept": "Отдел по развитию партнерских продаж", "text": "Я оцениваю участие моего прямого руководителя в процессе адаптации как очень важное и полезное. Его поддержка, чёткие инструкции и готовность ответить на вопросы помогают быстрее освоиться и почувствовать себя увереннее в новой команде. Благодаря такому подходу адаптация проходит гораздо легче и эффективнее."}, {"month": "2026-04", "dept": "Отдел дизайна", "text": "Все отлично) процесс адаптация у меня плавный, без спешки - и в этом большая заслуга Маши) это позволяет мне погрузиться в процесс внимательно, все разобрать, задать вопросы, на которые я оперативно получаю ответы :)"}, {"month": "2026-01", "dept": "Отдел разработки TMS (Russia)", "text": "Руководителя оцениваю как компетентного специалиста.\nДал информацию о проектах, организовал доступы, познакомил с командой."}, {"month": "2026-03", "dept": "Проектный офис", "text": "Гор вовлечен в мою адаптацию и помогает по любым вопросам"}, {"month": "2026-02", "dept": "Infrustructure", "text": "Полное участие"}, {"month": "2026-02", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Оцениваю на отлично.\nРуководитель провёл встречу, где подробно рассказал о команде, ожиданиях от меня, планах на ближайшее время, внимательно выслушал и ответил на мои вопросы. Так же я получил документ со всеми критериями прохождения испытательного срока."}, {"month": "2026-04", "dept": "ML & AI", "text": "Средне в целом он помог но сейчас он очень загружен и пока только только поланируем встречу"}, {"month": "2026-05", "dept": "Отдел по развитию партнерских продаж", "text": "Мы успели провести встречу с руководителем Ульяной, получила общее понимание по продуктам и информацию по партнеру, получила ссылки и курсы для обучения. С новым руководителем Юлией встречаемся в среду завтра ( 06.05) для обсуждения что пройдено, обсудим задачи на ИС."}, {"month": "2026-05", "dept": "Департамент развития продукта RUSSIA", "text": "👍"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Достаточное в рамках текущего онборда"}, {"month": "2026-03", "dept": "ML & AI", "text": "отлично"}, {"month": "2026-03", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Активное участие, помощь по любым вопросам, предоставление необходимых материалов для адаптации/обучения"}, {"month": "2026-02", "dept": "ML & AI", "text": "Все хорошо"}, {"month": "2026-05", "dept": "Отдел системного администрирования", "text": "Оцениваю хорошо. Руководитель провел со мной вводную встречу, рассказал про процессы, познакомил с командой. Постоянно интересуется нужна ли мне помощь."}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "Полноценное"}, {"month": "2026-02", "dept": "ML & AI", "text": "Положительно; Но  целом самостоятельно погружаюсь - когда у руководителя есть свободное время проводим 1:1, грумминг и планирования"}, {"month": "2026-05", "dept": "ML & AI", "text": "Полное"}, {"month": "2026-01", "dept": "ML & AI", "text": "Прекрасно по всей технической части. Всегда помогал и связывал с нужными людьми, если то было необходимо."}, {"month": "2026-01", "dept": "Отдел по развитию партнерских продаж", "text": "полностью включенный"}, {"month": "2026-02", "dept": "Направление финансового анализа и планирования", "text": "Был проведен звонок с целями на ближайшее время и на ИС.\nРуководитель всегда и по всем вопросам на связи.\nЧувствую вовлечение и поддержку"}, {"month": "2026-03", "dept": "ML & AI", "text": "Полное участие руководителя, максимальная вовлеченность"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Положительно"}, {"month": "2026-04", "dept": "Бухгалтерия", "text": "Помощь и участие в процессе адаптации, очень человечный подход."}, {"month": "2026-04", "dept": "ML & AI", "text": "Хорошо. Мы давно знакомы, поэтому каких-то ограничений не было.\n\nПригласил в чаты и трекер задач, познакомил с командой, прошелся по опыту ребят (к кому с чем можно приходить), рассказал поверхностно у кого, какие задачи сейчас.\n\nНа первый день дал небольшую задачу. На второй прошлись по целям на Q2, показал свои гипотезы, где можно ее решать, посоветовал, с кем пообщаться в первую очередь."}, {"month": "2026-04", "dept": "Группа микро бизнеса", "text": "Не знаю, что отвечать. Пока разговаривал только со специалистом по адаптации и с тренером"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Руководитель предоставил все необходимые материалы и контакты для дальнейшего онбординга"}], "comments_3d": [{"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "на данный момент, хотя прошло всего несколько дней, всё выглядит отлично, проект выглядит интересным и амбициозным, в команде отличные ребята, условия и средства для постепенного погружения в работу созданы"}, {"month": "2026-03", "dept": "Отдел разработки Fortis POS (MENA)", "text": "Прозрачные процессы, определена зона ответственности"}, {"month": "2026-05", "dept": "Отдел по развитию партнерских продаж", "text": "Я написал, что мне очень нравится работать в компании, потому что здесь созданы все условия для профессионального роста и комфортной работы. Меня полностью устраивают атмосфера в коллективе, поддержка со стороны руководства и интересные задачи, которые позволяют развиваться."}, {"month": "2026-04", "dept": "Отдел дизайна", "text": "С первого рабочего дня нравится атмосфера в общении с коллегами - все доступно, понятно, дружелюбно :)\nОчень классно устроено обучение на платформе, все структурно и последовательно)"}, {"month": "2026-01", "dept": "Отдел разработки TMS (Russia)", "text": "По наличию обратной связи во время погружения могу судить о высоком уровне организации компании.\n\nПроведен качественный вводный урок. \nПолучил необходимые инструкции и приступаю к работе."}, {"month": "2026-03", "dept": "Проектный офис", "text": "Много хаоса, но тем и интересно их структурировать"}, {"month": "2026-02", "dept": "Infrustructure", "text": "Понятный процесс онбординга (от HR, помогающего с онбордингом, до последовательного плана)"}, {"month": "2026-02", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Все были приветливы и отзывчивы, как со мной, так и с друг другом. Рабочие процессы отлажены, документация присутствует, доступы выданы быстро."}, {"month": "2026-04", "dept": "ML & AI", "text": "Продукт крутой, есть цель для меня. Но организация процессов храмает. Понимаю что может нужны 2 почты но то что комуницая раскидана по куче месенджеров а еще часть работает с впн плохо(пачка) и не понятно какие доступы у кого запрашивать. пришлой ходить по людям пока не получилось сформировать целевой список и потом только запросить доступы а потом еще пинговать\n\nв общем нужно всех просто перевести на какой то один месенджер и все"}, {"month": "2026-05", "dept": "Отдел по развитию партнерских продаж", "text": "На текущий момент нахожусь в процессе изучения, все понятно. \nНашла ответственных за доступы, быстро все настроила.\n\nПо запросу получаю ответ от Анны/Натальи по процессу обучения. \nНа данный момент все ок. Коллеги крайне доброжелательные."}, {"month": "2026-05", "dept": "Департамент развития продукта RUSSIA", "text": "🔥"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Все хорошо, отличный бадди, все  объясняет и показывает. есть выстроенные онбординги"}, {"month": "2026-03", "dept": "ML & AI", "text": "интересный современные задачи и тесная связь с ИИ"}, {"month": "2026-03", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "На данный момент всем доволен. Все дружелюбно относятся и общаются, готовы помочь и помогают в адаптации"}, {"month": "2026-02", "dept": "ML & AI", "text": "Процессы понятные. Команда хорошая. Задачи интересные. Доступы только сложно все получать"}, {"month": "2026-05", "dept": "Отдел системного администрирования", "text": "В целом мне все нравится. Офис, команда, атмосфера в компании - все замечательно."}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "Все супер"}, {"month": "2026-02", "dept": "ML & AI", "text": "все нравится"}, {"month": "2026-05", "dept": "ML & AI", "text": "Мне нравится атмосфера, сфокусированная на минимум бюрократии и максимум результата"}, {"month": "2026-01", "dept": "ML & AI", "text": "Мне нравится организация и процессы взаимодействий. Пока что кажется всё достаточно гибким и разумным. Действительно радует быть частью такой сильной команды и очень открытой к развитию экосистемы."}, {"month": "2026-01", "dept": "Отдел по развитию партнерских продаж", "text": "поддержка на всех этапах"}, {"month": "2026-02", "dept": "Направление финансового анализа и планирования", "text": "Были некоторые сложности в получении доступов (долго висели заявки в kaiten) и коммуникаций (бухгалтерия)\nНо эти сложности получилось преодолеть"}, {"month": "2026-03", "dept": "ML & AI", "text": "Все супер!"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Безлимитный кофе."}, {"month": "2026-04", "dept": "Бухгалтерия", "text": "Отличная компания, прекрасные люди"}, {"month": "2026-04", "dept": "ML & AI", "text": "До этого 2,5 года работал в стартапе, где плохо были устроенны процессы, не фиксировались цели и размазывалась ответственность. Отвечал за много вещей, которые не касались меня явно, но с которыми ко мне приходили. KPI были вида \"делать круто, держать хороший темп, повышать качество\". Отношение ко мне было хорошее, поскольку брал ответственность за сложные проекты (относительно средних в компании) и людей. Со всем справлялся, но получал от этого около ничего. Пару последних месяцев испытывал выгорание.\n\nТут все сильно лучше. Хорошо поставленные цели и сроки. Открытая коммуникация со всеми, на кого они направлены. За два дня поставил 7 созвонов с лидами и средними руководителями, со всеми пока приятное и открытое общение, обсуждение проблем. Приятно, что осталась свобода действий в действиях, которую я боялся потерять."}, {"month": "2026-04", "dept": "Группа микро бизнеса", "text": "Всё очень хорошо в плане онбординга и обучения. Ранее не сталкивался в других компаниях, чтобы обучение было таким проработанным"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "В целом мне всё нравится. Очень рад, что зона ответственности моей команды значительно пересекается с моим прошлым опытом. У меня уже складывается понимание о текущем состоянии команды, продукта и рабочих процессов, о том, какие проблемы есть на данном этапе и что требуется от меня, чтобы их решить. Воспринимаю это как интересную для меня задачу"}], "difficulties_1m": [{"month": "2026-03", "dept": "Core Merchants Services & Operations", "text": "azure"}, {"month": "2026-03", "dept": "Core Merchants Services & Operations", "text": "недоступность коллег для решения технических вопросов ввиду их работы над устранением аварии на инфраструктуре/отпуска"}, {"month": "2026-04", "dept": "Отдел разработки Fortis POS (MENA)", "text": "сложностей нет"}, {"month": "2026-04", "dept": "Отдел разработки Fortis POS (MENA)", "text": "нет"}, {"month": "2026-04", "dept": "Отдел дизайна", "text": "все хорошо, по возникшим вопросам ребята из команды помогают)"}, {"month": "2026-04", "dept": "Отдел дизайна", "text": "нет"}, {"month": "2026-02", "dept": "Отдел разработки TMS (Russia)", "text": "не возникает"}, {"month": "2026-02", "dept": "Отдел разработки TMS (Russia)", "text": "нет"}, {"month": "2026-01", "dept": "Отдел логистики", "text": "все программы достаточно понятный"}, {"month": "2026-01", "dept": "Отдел логистики", "text": "только первое время привыкал  к рабочей обстановке"}, {"month": "2026-03", "dept": "Infrustructure", "text": "С пачкой-она виснет регулярно =("}, {"month": "2026-03", "dept": "Infrustructure", "text": "Много систем, в котороых мы держим информацию или решаем схожие задачи.\nМессенджеры, например\nTg, Slack, Pachca (3 шт)\nУправление\\хранение документации  Notion, Confluence\nНадо помнить кто что активно использует, а что не использует."}, {"month": "2026-03", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "С программами нет проблем. В целом не хватает какого-то технического списка доступов к ресурсам, которые должны быть у каждого разработчика/лида. Приходится стихийно сталкиваться то с отсутствием одного, то другого доступа. Из плюсов: составляю инструкцию в конфлюэнс по этим моментам, которая улучшит дальнейший онбординг разработчиков."}, {"month": "2026-03", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Не возникало (по доступам написал ранее)."}, {"month": "2026-05", "dept": "ML & AI", "text": "с кайтеном потому что есть два контура и не ясно куда писать в лайф пэй или фортис"}, {"month": "2026-05", "dept": "ML & AI", "text": "да. не было внятного онборднга и внятного погружения в процессы и продукт все очень скомкано и хаотично"}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "основное это впн доступы."}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "нет"}, {"month": "2026-01", "dept": "Департамент по работе с персоналом", "text": "Пока сложностей не возникало"}, {"month": "2026-01", "dept": "Департамент по работе с персоналом", "text": "Нет"}, {"month": "2026-04", "dept": "ML & AI", "text": "-"}, {"month": "2026-04", "dept": "ML & AI", "text": "-"}, {"month": "2026-04", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Сейчас постоянных проблем и сложности с программами/инструментами нет"}, {"month": "2026-04", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Не возникают"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Все ок"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Не возникало"}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "Больше всего возникает рабочих вопросов, как этот продукт должен работать."}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "Нет"}, {"month": "2026-01", "dept": "Уволенные сотрудники", "text": "Пока больше вопросов по показателям, по амо не совсем удалось изучить как устроены все процессы"}, {"month": "2026-01", "dept": "Уволенные сотрудники", "text": "Высокая интенсивность"}, {"month": "2026-03", "dept": "ML & AI", "text": "С доступами в Claude Code - не получалось получить их 10 дней"}, {"month": "2026-03", "dept": "ML & AI", "text": "Из большего не до конца было понятно к кому пойти с точки зрения блокеров - из-за чего несколько смещался фокус с основных задач"}, {"month": "2026-05", "dept": "ML & AI", "text": "Такого нет"}, {"month": "2026-05", "dept": "ML & AI", "text": "Мало документации даже по существующим процессам"}, {"month": "2026-02", "dept": "ML & AI", "text": "Не самый приятный онбординг проектов на AWS, если есть необходимость в GPU мощностях."}, {"month": "2026-02", "dept": "ML & AI", "text": "Не возникали"}, {"month": "2026-02", "dept": "Отдел по развитию партнерских продаж", "text": "https://life-pay.kaiten.ru\nПоскольку доступ не ко всем задачам и доскам, необходимо каждый раз запрашивать доступ, что усложняет поиск задач"}, {"month": "2026-02", "dept": "Отдел по развитию партнерских продаж", "text": "Если возникают сложности, коллеги отзывчивые и помогают сразу все решить. Поэтому проблемы выделить не могу"}, {"month": "2026-03", "dept": "Направление финансового анализа и планирования", "text": "Сложностей как таковых нет, единственное в ispringlearn все время приходится менять пароль, тк ранее установленный не работает по непонятным для меня причинам"}, {"month": "2026-03", "dept": "Направление финансового анализа и планирования", "text": "Сложность в коммуникациях с бухгалтерией, на вопросы могут ответить : \"сейчас не до тебя, я занимаюсь другой задачей\" (дословно). У части команды бухгалтерии нет понимания корпоративной культуры"}, {"month": "2026-01", "dept": "Core Merchants Services & Operations", "text": "Кайтен, не были сразу предоставлены доступы в пространство команды"}, {"month": "2026-01", "dept": "Core Merchants Services & Operations", "text": "нет"}, {"month": "2026-03", "dept": "ML & AI", "text": "Пока без сложностей, все ок"}, {"month": "2026-03", "dept": "ML & AI", "text": "Да, поначалу было много непонятного, но руководитель и коллеги помогли со всем разобраться"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Да пока вроде никаких проблем\n\nТолько с connactable фигня какая-то иногда, но в целом норм"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Пока вроде нет"}, {"month": "2026-04", "dept": "Бухгалтерия", "text": "Pyrus"}, {"month": "2026-04", "dept": "Бухгалтерия", "text": "нет"}, {"month": "2026-01", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "ни с какими"}, {"month": "2026-01", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "нет не возникало"}, {"month": "2026-05", "dept": "ML & AI", "text": "В работе ни с какими"}, {"month": "2026-05", "dept": "ML & AI", "text": "Нет. Оперативно включился в работу"}, {"month": "2026-04", "dept": "Группа микро бизнеса", "text": "Не возникают."}, {"month": "2026-04", "dept": "Группа микро бизнеса", "text": "Нет. Разве что с завалом задач пока есть сложность"}, {"month": "2026-03", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Поначалу были вопросы по Kaiten, но с ним уже разобрались."}, {"month": "2026-03", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "-"}], "add_remove_1m": [{"month": "2026-03", "dept": "Core Merchants Services & Operations", "text": "-"}, {"month": "2026-04", "dept": "Отдел разработки Fortis POS (MENA)", "text": "Список внутренних ИТ-ресурсов компании, ответственных за них лиц и описание как получить доступ"}, {"month": "2026-04", "dept": "Отдел дизайна", "text": "по общей информации все в курсах есть :) какие-то уже узкие вопросы по нашему отделу я задавала непосредственно руководителю)"}, {"month": "2026-02", "dept": "Отдел разработки TMS (Russia)", "text": "всё нужно"}, {"month": "2026-01", "dept": "Отдел логистики", "text": "сложно сказать"}, {"month": "2026-03", "dept": "Infrustructure", "text": "Сделать какую-то страницу-каталог c линками на системы+предназначение и кто пользует что, чтобы в любой момент можно было зайти и понять:\nДокументация, которую используют для %назначение% - вот линк на notion\nДокументация которую пишут IT - линк на confluence\nКурсы обучения - вот линк\nСистема оформления заявок (отпуск, заказ документов итд) - вот линк"}, {"month": "2026-03", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Убирать ничего точно не надо, очень полезный и удобный курс!"}, {"month": "2026-05", "dept": "ML & AI", "text": "нет идей"}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "можно убрать по деловой переписке и встречам"}, {"month": "2026-01", "dept": "Департамент по работе с персоналом", "text": "1й день - к моменту прохождения курса большая часть уже проделана и не актуальна \nПриветствие от топ команды - неактуальные топы"}, {"month": "2026-04", "dept": "ML & AI", "text": "-"}, {"month": "2026-04", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Отдельное часовое видео-обучение по Pyrus думаю нужно не всем в курсе адаптации, мне как разработчику пока практически не пришлось с ним взаимодействовать и в будущем как я понимаю буду минимально с ним взаимодействовать"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Все ок"}, {"month": "2026-04", "dept": "Направление разработки Payments", "text": "Оставить все"}, {"month": "2026-01", "dept": "Уволенные сотрудники", "text": "Я не проходила еще курсы, только самое начальное, поэтому оценить не могу"}, {"month": "2026-03", "dept": "ML & AI", "text": "Что-нибудь про эскалацию - для быстрого разрешения блокеров + про презентацию результатов"}, {"month": "2026-05", "dept": "ML & AI", "text": "-"}, {"month": "2026-02", "dept": "ML & AI", "text": "Честно, без понятия, мне понравилась возможность в первые дни быстро вкатиться. Дальше, скорее всего, всё равно информация больше специфична для конкретной команды."}, {"month": "2026-02", "dept": "Отдел по развитию партнерских продаж", "text": "Коротко, не перегружено. Запоминание происходит в процессе погружения в боевые задачи, поэтому мне информации хватило."}, {"month": "2026-03", "dept": "Направление финансового анализа и планирования", "text": "Мне кажется адаптация в компании развита хорошо, отельный плюс за велком от Топ-менеджмента"}, {"month": "2026-01", "dept": "Core Merchants Services & Operations", "text": "Может сравнение Кайтен с Джирой для новоприбывших из айти, кто имеет опыт с Джирой"}, {"month": "2026-03", "dept": "ML & AI", "text": "Все ок"}, {"month": "2026-03", "dept": "Направление разработки Payments", "text": "Не знаю, всё норм)"}, {"month": "2026-04", "dept": "Бухгалтерия", "text": "всё отлично"}, {"month": "2026-01", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "никакую"}, {"month": "2026-05", "dept": "ML & AI", "text": "Лично мне бы сильно помогла информация по отделам и ответственным людям. В процессе сам восстанавливал это по pyrus, орг-организации в miro и просто общения со смежными людьми."}, {"month": "2026-04", "dept": "Группа микро бизнеса", "text": "Не знаю"}, {"month": "2026-03", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Мне показалось, что в курсах содержится наиболее обобщённая информация. Хотелось бы больше информации, связанной больше с разработкой:\n- краткая вводная с перечнем инструментов, которыми пользуются в компании для процессов разработки (Kaiten, Confluence); в текущих курсах я находил информацию про Пачку (полезная) и Pyrus (длинная лекция, после которой я подумал, что Pyrus - это какой-то мощный инструмент для ведения проектов, но по факту за первый месяц работы я использовал его только для нажатия кнопки, чтобы подтвердить отпуск); \n- краткая вводная с перечнем текущих команд разработки и зонами их ответственности;\n- контакты helpdesk;"}], "what_helped": [{"month": "2026-02", "dept": "Департамент клиентского сервиса", "text": "Что точно помогло: регулярная коммуникация с коллегами. Мне очень не хватило продуктового обучения, этот блок добивала вместе со своими командами"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Всего хватает"}, {"month": "2026-04", "dept": "Core Merchants Services & Operations", "text": "коллеги, ai"}, {"month": "2026-05", "dept": "Отдел разработки Fortis POS (MENA)", "text": "мало документации по проектам"}, {"month": "2026-04", "dept": "Отдел разработки TMS (Russia)", "text": "Помогли вводные встречи о проектам, консультации бади и тим лида. \nБыло достаточно технических встреч."}, {"month": "2026-03", "dept": "Отдел логистики", "text": "всё по немного"}, {"month": "2026-05", "dept": "Infrustructure", "text": "1. Помог онбординг-план и buddy (Наталья Васильева)\n2. Слишком много систем коммуникации и ведения доков - сообщения (slack,telegram, pachca), дополнительно yandex telemost, zoom, системы ведения документации - notion (кто-то там ведет), Confluence (основная часть здесь ведет). Эти все системы еще и не интегрированы между собой, нельзя взять Google calendar и просто поставить встречу-надо еще отдельно каждый раз генерировать url на звонок в pachca/zoom/yandex telemost итд"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Очень помог buddy — Валерий Волынкин. Также информация на платформах и onboarding встречах была исчерпывающая. Коллеги также очень открыты и помогали вливаться в процесс.\n\nНе хватало хорошей инструкции по техническим доступам, пришлось их собирать по крупицам в течении всех трёх месяцев, порой ожидание доступов блочило работу на пол дня (хотя могли бы быть получены заранее)."}, {"month": "2026-02", "dept": "Направление кадрового делопроизводства", "text": "Помогла поддержка от коллег и руководителя.\nПонятные инструменты для работы"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Очень помогла поддержка коллег из департамента и понимание коллег что нужно время на адаптацию. Было бы проще если бы передача дел выглядела иначе, но в целом это было оговорено на старте, в существующих условиях все прошло отлично."}, {"month": "2026-01", "dept": "Направление разработки Payments", "text": "Процесс адаптации в нашей компании организован предельно ясно и понятно. Если возникают неясности, сотрудники могут свободно обращаться за разъяснениями к своим коллегам."}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Всего было достаточно. все прошло легко и комфортно. Спасибо всем причастным  коллегам"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Очень помогает общение со своим бадди, тимлидом и в целом с коллегами по команде, возможно не всё необходимое зафиксировано в текстовом виде, но всё чего не находил - отмечал ребятам из команды и это дополнялось в процессе"}, {"month": "2026-01", "dept": "Группа продаж клиентам Альфабанк 2", "text": "Встречи с руководителем, коллегами, сотрудниками, тренером, вводное обучение помогли адаптироваться"}, {"month": "2026-05", "dept": "ML & AI", "text": "Всего достаточно"}, {"month": "2026-03", "dept": "Юридический отдел", "text": "Все было отлично!"}, {"month": "2026-02", "dept": "Отдел дизайна", "text": "Практика, новые задачи и командные проекты помогли адаптироваться мне больше всего, а также мой бадди, который был всегда на связи, поддерживал и помогал с решением любых вопросов по моим рабочим процессам в ходе адаптации\n\nВсего хватило, конкретных недостатков или дефицита не было"}, {"month": "2026-03", "dept": "ML & AI", "text": "Да всего хватило. В целом, я довольно сильно замкнут на своей локальной команде с руководителем, поэтому много и не потребовалось, кроме каких-то общих процессов, ответы на которые в основном можно найти в Pyrus."}, {"month": "2026-01", "dept": "Отдел обучения персонала", "text": "Быстро адаптироваться помогли мои коллеги в группе, которые быстро отвечали на вопросы и объясняли, как всё устроено. Понятная постановка задач позволила быстро влиться в рабочий процесс и эффективно выполнять обязанности. Также системная поддержка руководителя группы и направления ОРДК, помогла разобраться в специфике направления. \n\nТрудности в адаптации возникли из-за несостыковок в базе знаний, некоторые разделе требуют актуализации."}, {"month": "2026-04", "dept": "Отдел по развитию партнерских продаж", "text": "Всё в комплексе: и команда отличная, и обучение на высоте. Адаптация прошла быстро"}, {"month": "2026-05", "dept": "Направление финансового анализа и планирования", "text": "Процесс адаптации прошел легко, благодаря вовлеченности и заинтересованности моей команды (1to1 с руководителем и созвоны с бади еженедельно) и всех кто был причастен к адаптации и трудоустройству"}, {"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "Помогло подключение к рабочему проекту, знакомство с командой, сами коллеги"}, {"month": "2026-01", "dept": "Backoffice", "text": "По большинству процессов отсутствует документация, как они работают знают точечные люди и то частично, поэтому каждая большая задача превращается в месяцы поиска информации и согласования дат встреч.\n\nБадди уволился посередини срока онбординга"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Мне помогла открытость и поддержка Даши, когда можно в любой момент задать вопрос и получить ответ. А также то, что меня сразу включили в живые задачи, так вникаешь в процессы намного быстрее, чем просто изучая документы. В общем, атмосфера в отделе очень в этом помогает"}, {"month": "2026-05", "dept": "ML & AI", "text": "Очень классные коллеги"}, {"month": "2026-02", "dept": "Отдел сопровождение клиентов", "text": "Очень помогло постоянное взаимодействие с коллегами (Можно задать вопрос на созвоне). База знания так же была актуальна. И постоянная поддержка от Бадди была всегда кстати."}, {"month": "2026-05", "dept": "Направление разработки Payments", "text": "Все вокруг помогали, подсказывали, поддерживали, так что проблем почти не возникало, а если и возникали то быстро решались"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "помощь от руководителя"}, {"month": "2026-05", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "В первую очередь мне помогли встречи с бадди, встречи с коллегами, информация из БЗ. Из того, что мне могло бы помочь:\n- информация про работу с Kaiten;\n- контакты команды Helpdesk и порядок работы с ними.\nВ процессе адаптации пришлось явно запрашивать большое количество доступов  к каким-то общим ресурсам (БЗ, репозитории, Кубер, AWS VPN, и т.д.), было бы здорово, если бы такие доступы выдавались новым сотрудникам автоматически в зависимости от специализации."}], "extra_proc": [{"month": "2026-02", "dept": "Департамент клиентского сервиса", "text": "Нет)"}, {"month": "2026-02", "dept": "Департамент клиентского сервиса", "text": "Опять же, я бы скорее говорила о недостающих аспектах: описанные регламенты по продуктам, процессам. Главное - актуальные"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "нет"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Нет таких"}, {"month": "2026-04", "dept": "Core Merchants Services & Operations", "text": "нет"}, {"month": "2026-04", "dept": "Core Merchants Services & Operations", "text": "пока что таких не вижу"}, {"month": "2026-05", "dept": "Отдел разработки Fortis POS (MENA)", "text": "нет"}, {"month": "2026-05", "dept": "Отдел разработки Fortis POS (MENA)", "text": "излишне усложнен релизный процесс"}, {"month": "2026-04", "dept": "Отдел разработки TMS (Russia)", "text": "Я не был перегружен встречами или активностями по адаптации, процесс проходил мягко."}, {"month": "2026-04", "dept": "Отдел разработки TMS (Russia)", "text": "Я о таких не знаю."}, {"month": "2026-03", "dept": "Отдел логистики", "text": "не было"}, {"month": "2026-03", "dept": "Отдел логистики", "text": "таких процессов не замечал"}, {"month": "2026-05", "dept": "Infrustructure", "text": "Нет. Все достаточно разумно и последовательно"}, {"month": "2026-05", "dept": "Infrustructure", "text": "я б не сказал что какие-то процессы прямо лишние или непонятные"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Лишнего точно ничего не было :)"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Не нашёл таких процессов, спасибо за организацию!"}, {"month": "2026-02", "dept": "Направление кадрового делопроизводства", "text": "Не заметила ничего лишнего"}, {"month": "2026-02", "dept": "Направление кадрового делопроизводства", "text": "Не сталкивалась с такими процессами"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Нет"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Процесс \"заказ канцтоваров\" через пайрус для меня странный, и у меня много вопросов к процессу \"согласование расходов\", потому что он очень долгий и в случае регулярных платежей это становится проблемой"}, {"month": "2026-01", "dept": "Направление разработки Payments", "text": "Думаю все шаги в адаптации были уместны"}, {"month": "2026-01", "dept": "Направление разработки Payments", "text": "Не нашел таких."}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "нет"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "по процессам не скажу. но есть недоговороспособные коллеги."}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "-"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "-"}, {"month": "2026-01", "dept": "Группа продаж клиентам Альфабанк 2", "text": "Не было такого"}, {"month": "2026-01", "dept": "Группа продаж клиентам Альфабанк 2", "text": "Не вижу таких процессов"}, {"month": "2026-05", "dept": "ML & AI", "text": "Ничего лишнего не было"}, {"month": "2026-05", "dept": "ML & AI", "text": "Сложно сказать. Мне все понятно было"}, {"month": "2026-03", "dept": "Юридический отдел", "text": "Нет"}, {"month": "2026-03", "dept": "Юридический отдел", "text": "все процессы, с которыми я сталкивалась, нисколько не лишние и достаточно понятные"}, {"month": "2026-02", "dept": "Отдел дизайна", "text": "Нет, такого не было. Всего было в меру, информационного перегруза не возникло в ходе адаптации"}, {"month": "2026-02", "dept": "Отдел дизайна", "text": "Мне кажется, что таких процессов нет, по крайней мере лично мной замечены не были. Все процессы, которые проходила я - помогли мне быстрее и легче адаптироваться и быстро погрузиться в работу."}, {"month": "2026-03", "dept": "ML & AI", "text": "Да нет, наверное. В начале достаточно подробно вкатился, а дальше никто особо не трогал и не мешал выполнению основных задач. В целом, всё здорово, если так подумать."}, {"month": "2026-03", "dept": "ML & AI", "text": "Пока не прочувствовал особого смысла в connectable, видимо, придёт чуть позднее."}, {"month": "2026-01", "dept": "Отдел обучения персонала", "text": "нет"}, {"month": "2026-01", "dept": "Отдел обучения персонала", "text": "Затрудняюсь на это ответить"}, {"month": "2026-04", "dept": "Отдел по развитию партнерских продаж", "text": "-"}, {"month": "2026-04", "dept": "Отдел по развитию партнерских продаж", "text": "-"}, {"month": "2026-05", "dept": "Направление финансового анализа и планирования", "text": "Нет"}, {"month": "2026-05", "dept": "Направление финансового анализа и планирования", "text": "На практике с такими процессами не сталкивалась"}, {"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "Не было"}, {"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "Затрудняюсь ответить"}, {"month": "2026-01", "dept": "Backoffice", "text": "Нет такого"}, {"month": "2026-01", "dept": "Backoffice", "text": "не могу ответить"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Нет, все отлично, возможно курсов по безопасности было очень много и в некоторых как-будто дублировались вопросы"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Пока таких не выявила"}, {"month": "2026-05", "dept": "ML & AI", "text": "Ничего, все ок"}, {"month": "2026-05", "dept": "ML & AI", "text": "минимально бюрократии, все как надо"}, {"month": "2026-02", "dept": "Отдел сопровождение клиентов", "text": "Сомневаюсь. Мне вся информация лишней не была."}, {"month": "2026-02", "dept": "Отдел сопровождение клиентов", "text": "Я не знаю таких процессов. На данный момент для меня нет лишних процессов."}, {"month": "2026-05", "dept": "Направление разработки Payments", "text": "Да в целом нет"}, {"month": "2026-05", "dept": "Направление разработки Payments", "text": "Не знаю, пока сталкивался только с локальными процессами в команде, к ним вопросов нету. К процессам компании вопросов тоже нету"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "нет"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "нет таких"}, {"month": "2026-05", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Лишнего точно ничего не было :)"}, {"month": "2026-05", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Я думаю, что лишних процессов сейчас нет, их не так много, и мне кажется, что сейчас соблюдается баланс между отчётностью и вмешательством. Т.е. есть ряд процессов, которые несут в себе цель поддержки некоторой дисциплины, при этом они не являются слишком бюррократичными, т.е. не мешают работе."}], "obstacles": [{"month": "2026-02", "dept": "Департамент клиентского сервиса", "text": "Самая главная трудность в адаптации: отсутствие регламентов (не только по продукту, но и по процессам)\n\nВ целом, всё, что в лоне моих команд, теперь моя зона ответственности. Думаю, на уровне компании понимание такой потребности тоже есть)"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "нет"}, {"month": "2026-04", "dept": "Core Merchants Services & Operations", "text": "отсутствие некоторых доступов"}, {"month": "2026-05", "dept": "Отдел разработки Fortis POS (MENA)", "text": "нет"}, {"month": "2026-04", "dept": "Отдел разработки TMS (Russia)", "text": "Все вопросы решались оперативно - как организационные, так и технические."}, {"month": "2026-03", "dept": "Отдел логистики", "text": "нет"}, {"month": "2026-05", "dept": "Infrustructure", "text": "Про несвязанные системы в работы (мессенджеры, электродокументы) написал ранее"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Порой долгие блокировки от команд DevOps, DWH. В остальном всё по процессам!"}, {"month": "2026-02", "dept": "Направление кадрового делопроизводства", "text": "Не сталкивалась"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "В основном мешали ненастроенные процессы, но я здесь за этим"}, {"month": "2026-01", "dept": "Направление разработки Payments", "text": "Нет"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "нет"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Непредвиденные обстоятельства в мире, практически как пришел в компанию в марте - появились инфраструктурные проблемы (не по вине компании и сотрудников), из-за этого немного замедлился процесс адаптации в начале, но позже нагнали)"}, {"month": "2026-01", "dept": "Группа продаж клиентам Альфабанк 2", "text": "Нет"}, {"month": "2026-05", "dept": "ML & AI", "text": "Сложные процессы"}, {"month": "2026-03", "dept": "Юридический отдел", "text": "В целом, все решаемо)"}, {"month": "2026-02", "dept": "Отдел дизайна", "text": "Иногда с тревогой и неуверенностью, но это мои личные переживания. Любой человек на новом месте немного волнуется и переживает, мне кажется, что это нормально в период адаптации. Сейчас все прекрасно."}, {"month": "2026-03", "dept": "ML & AI", "text": "Слишком долгое получение доступов к любой даже Read-only чепухе."}, {"month": "2026-01", "dept": "Отдел обучения персонала", "text": "Не состыковки в базе знаний, где часть информации требует актуализации. Приходилось редактировать проделанную работу."}, {"month": "2026-04", "dept": "Отдел по развитию партнерских продаж", "text": "Найди рабочую доску в Kaiten))\n\nПроблема в том, что все доски сейчас в режиме невидимости и к каждой нужно просить доступ. Это мелочь, но лучше бы доступ и нужные ресурсы находить по поиску сразу"}, {"month": "2026-05", "dept": "Направление финансового анализа и планирования", "text": "в целом нет, но часто мои задачи были не в приоритете у коллег, частично наблюдаю незрелость бизнес процессов (много неавтоматизированных участков, много информации только в голове у коллег и нигде не тиражировано)"}, {"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "Нет"}, {"month": "2026-01", "dept": "Backoffice", "text": "Да, описал в первом пункте."}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Было такое, некоторые вопросы требовалось эскалировать через руководителя, чтобы получить ответ на них"}, {"month": "2026-05", "dept": "ML & AI", "text": "Нет"}, {"month": "2026-02", "dept": "Отдел сопровождение клиентов", "text": "Мешает только ФНС со своими тех работами)) Инженеры, у которых нет времени согласовать дату с клиентом и потом позвонить в эту самую дату. В остальном, всё чудесно."}, {"month": "2026-05", "dept": "Направление разработки Payments", "text": "Иногда могли разные доступы долго выдавать, но в остальном всё было быстро"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "долгие процессы по выдаче личного оборудования"}, {"month": "2026-05", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "Как уже писал ранее, больше всего проблем было связано с запросом доступов к различным ресурсам и ожидание ответа от команды Helpdesk."}], "comments_fin": [{"month": "2026-02", "dept": "Департамент клиентского сервиса", "text": "Как-то я уже подсвечивала: самое главное в компании для меня - люди. И здесь они замечательные)\n\nОстальные штуки вполне можно победить, если есть уверенная команда"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Все хорошо"}, {"month": "2026-04", "dept": "Core Merchants Services & Operations", "text": "на данный момент мне нравится всё: команда, процессы, условия работы, проект, компания"}, {"month": "2026-05", "dept": "Отдел разработки Fortis POS (MENA)", "text": "вопрос с премиями оставляет неудовлетворенность"}, {"month": "2026-04", "dept": "Отдел разработки TMS (Russia)", "text": "Комфортная среда для работы. \nПриятные квалифицированные коллеги."}, {"month": "2026-03", "dept": "Отдел логистики", "text": "всё супер!!!"}, {"month": "2026-05", "dept": "Infrustructure", "text": "В целом коллектив хороший и веселый."}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "-1 за отмену премий 😅\n\nЕщё за последние пару месяцев 90% больших встреч переносилось, чувствуется большой уровень неопределённости."}, {"month": "2026-02", "dept": "Направление кадрового делопроизводства", "text": "Профессиональная, отзывчивая, позитивная команда, которая работает на результат"}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "Я уже забыла какой был вопрос в предыдущем пункте :):)"}, {"month": "2026-01", "dept": "Направление разработки Payments", "text": "Я рад что стал частью команды (Часть команды — часть корабля). Внутренняя атмосфера соответствует моим ожиданиям."}, {"month": "2026-02", "dept": "Департамент по работе с персоналом", "text": "все супер. были бы вакансии всех знакомых переманила бы)"}, {"month": "2026-05", "dept": "Отдел разработки Fortis CRM (MENA)", "text": "Всё хорошо, особо не ощущаю проблем в адаптации и погружении в полноценную работу, всё происходит плавно и практически на все вопросы нахожу ответы"}, {"month": "2026-01", "dept": "Группа продаж клиентам Альфабанк 2", "text": "Мне понятны мои цели и инструменты их достижения. \nМне комфортно взаимодействовать с руководителем, с коллегами, с сотрудниками.\nЯ считаю, что первые месяцы адаптации прошли хорошо, впереди ещё много работы, конечно, но всё идет своим чередом, в комфортном для меня темпе. Помощь руководителя и коллег очень ощутима. Спасибо Дине Фроловой и Ольге Ротовой за помощь и за постоянную готовность помочь в любом вопросе."}, {"month": "2026-05", "dept": "ML & AI", "text": "Все круто. Спасибо"}, {"month": "2026-03", "dept": "Юридический отдел", "text": "все супер!"}, {"month": "2026-02", "dept": "Отдел дизайна", "text": "Мне все нравится! Отличная команда, прекрасный руководитель, заботливый бадди и уважительные заказчики."}, {"month": "2026-03", "dept": "ML & AI", "text": "Да нечего особо комментировать. Нравится атмосфера скорости и технологичности. Нравится, что все друг с другом очень приятно коммуницируют по делу всегда. Всё круто"}, {"month": "2026-01", "dept": "Отдел обучения персонала", "text": "Ну если бы мне не нравилось здесь работать, ушла бы в первый месяц)\nКонечно важную роль играет коллектив, действительно чувствуется поддержка на каждом этапе. Интересные задачи, с некоторыми сталкивалась впервые. \nРабочая нагрузка пропорциональна рабочему времени, т.е. нет перегруза."}, {"month": "2026-04", "dept": "Отдел по развитию партнерских продаж", "text": "вокруг крутые профи, у которых есть чему поучиться, а разнообразные задачи не дают закиснуть"}, {"month": "2026-05", "dept": "Направление финансового анализа и планирования", "text": "На данный момент я всем довольна, есть интересные задачи и большой фронт работ. Я чувствую поддержку своей команды, я работаю в комфортном коллективе"}, {"month": "2026-02", "dept": "Core Merchants Services & Operations", "text": "Всё комфортно, мне нравится здесь"}, {"month": "2026-01", "dept": "Backoffice", "text": "Своевременная зар.плата и ап по роли - хорошо"}, {"month": "2026-01", "dept": "Юридический отдел", "text": "Мне комфортно благодаря отличному коллективу с открытой коммуникацией, возможности прокачивать хард-скиллы на реальных продуктах и участвовать в выстраивании процессов, а также постоянному общению с руководителями, которое помогает развивать софт-скиллы"}, {"month": "2026-05", "dept": "ML & AI", "text": "все супер!"}, {"month": "2026-02", "dept": "Отдел сопровождение клиентов", "text": "Мне нравится работать в Life-Pay!"}, {"month": "2026-05", "dept": "Направление разработки Payments", "text": "Всё нравится всё спокойно, работаем)"}, {"month": "2026-02", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "долгие процессы по выдаче личного оборудования"}, {"month": "2026-05", "dept": "Отдел разработки Industry Solutions (MENA)", "text": "За прошедшие три месяца я не столкнулся с чем-то, что показалось бы для меня неожиданным или неприемлемым. Реакции руководителя и большинства коллег на различные ситуации/задачи/проблемы показались мне максимально адекватными и рациональными"}]}};
+const MONTHS = D.months;
+const ML = D.month_labels;
+const PAL = ['#6366f1','#3b82f6','#22c55e','#f59e0b','#ef4444','#14b8a6','#f97316','#8b5cf6','#ec4899','#06b6d4'];
+
+const built = new Set();
+function go(id, btn) {
+  document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.ntab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('active');
+  if(!built.has(id)){ built.add(id); buildTab(id); }
+}
+
+const gM = function(){ return document.getElementById('fMonth').value; };
+const gD = function(){ return document.getElementById('fDept').value; };
+
+function resp(sv, month, dept) {
+  var bm = D.respondents[sv];
+  if(month==='ALL') return MONTHS.reduce(function(a,m){ return a+(dept==='ALL'?bm[m]&&bm[m].ALL||0:bm[m]&&bm[m][dept]||0); },0);
+  return dept==='ALL'?bm[month]&&bm[month].ALL||0:bm[month]&&bm[month][dept]||0;
+}
+function getScore(key, month, dept) {
+  var s = D.scores[key];
+  if(month==='ALL'){
+    var v = MONTHS.map(function(m){ return s[m]; }).filter(function(x){ return x!=null; });
+    return v.length ? Math.round(v.reduce(function(a,b){ return a+b; })/v.length*10)/10 : null;
+  }
+  return s[month]!=null ? s[month] : null;
+}
+function getChoices(key, month, dept) {
+  var s = D.choices[key];
+  if(month==='ALL'){
+    var r={};
+    MONTHS.forEach(function(m){ Object.keys(s[m]||{}).forEach(function(k){ r[k]=(r[k]||0)+s[m][k]; }); });
+    return r;
+  }
+  return s[month]||{};
+}
+function calcENPS(month, dept) {
+  if(month==='ALL'){
+    var p=0,n=0,d=0;
+    MONTHS.forEach(function(m){ var e=D.enps_series[m]; if(e){p+=e.promoters;n+=e.neutrals;d+=e.detractors;} });
+    var t=p+n+d; return t?{enps:Math.round((p/t-d/t)*100),promoters:p,neutrals:n,detractors:d,total:t}:null;
+  }
+  return D.enps_series[month]||null;
+}
+function fmt(v,max){ return v?v+'/'+max:'—'; }
+function strs(v,max){ if(!v)return''; var f=Math.round(v/max*5); return'★'.repeat(f)+'☆'.repeat(5-f); }
+
+function renderENPS(sid,did,bid,month,dept) {
+  var e=calcENPS(month,dept), el=document.getElementById(sid);
+  if(!e){ el.textContent='—'; document.getElementById(did).textContent='Нет данных'; document.getElementById(bid).innerHTML=''; return; }
+  var s=e.enps;
+  el.textContent=(s>0?'+':'')+s;
+  el.style.color=s>=50?'var(--green)':s>=0?'var(--yellow)':'var(--red)';
+  document.getElementById(did).textContent='Промоутеры: '+e.promoters+' · Нейтр: '+e.neutrals+' · Детракт: '+e.detractors;
+  var t=e.total;
+  document.getElementById(bid).innerHTML=
+    '<div style="flex:'+(e.promoters/t*100)+';background:var(--green);border-radius:5px"></div>'+
+    '<div style="flex:'+(e.neutrals/t*100)+';background:var(--yellow);border-radius:5px"></div>'+
+    '<div style="flex:'+(e.detractors/t*100)+';background:var(--red);border-radius:5px"></div>';
+}
+
+var ch={};
+function mk(id,cfg){ if(!document.getElementById(id))return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),cfg); }
+
+function lOpts(mn,mx,leg) {
+  return {responsive:true,plugins:{legend:{display:leg!==false,labels:{font:{size:10},boxWidth:10,padding:5}}},
+    scales:{y:{min:mn,max:mx,grid:{color:'#f1f5f9'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}};
+}
+function bOpts(mn,mx,leg) {
+  return {responsive:true,plugins:{legend:{display:leg!==false,labels:{font:{size:10},boxWidth:10,padding:5}}},
+    scales:{y:{min:mn,max:mx,grid:{color:'#f1f5f9'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}};
+}
+function dOpts() {
+  return {responsive:true,cutout:'55%',plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:9,padding:5}},
+    tooltip:{callbacks:{label:function(c){ return c.label+': '+c.raw; }}}}};
+}
+function donut(id,data){
+  var e=Object.keys(data).filter(function(k){ return data[k]>0; }).map(function(k){ return [k,data[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
+  if(!e.length)return;
+  mk(id,{type:'doughnut',data:{labels:e.map(function(x){ return x[0]; }),datasets:[{data:e.map(function(x){ return x[1]; }),backgroundColor:PAL,borderWidth:2,borderColor:'#fff'}]},options:dOpts()});
+}
+
+var labs = MONTHS.map(function(m){ return ML[m]; });
+
+function buildOV() {
+  mk('cENPS',{type:'line',data:{labels:labs,datasets:[{label:'eNPS',data:MONTHS.map(function(m){ return D.enps_series[m]?D.enps_series[m].enps:null; }),borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',fill:true,tension:0.4,pointRadius:5,borderWidth:2.5}]},options:lOpts(0,100,false)});
+  mk('cSat',{type:'line',data:{labels:labs,datasets:[
+    {label:'3 дня',data:MONTHS.map(function(m){ return D.scores.satisfaction_3d[m]; }),borderColor:'#8b5cf6',fill:false,tension:0.4,pointRadius:4,borderWidth:2,borderDash:[4,3]},
+    {label:'1 месяц',data:MONTHS.map(function(m){ return D.scores.satisfaction_1m[m]; }),borderColor:'#3b82f6',fill:false,tension:0.4,pointRadius:4,borderWidth:2},
+    {label:'Финал',data:MONTHS.map(function(m){ return D.scores.satisfaction_fin[m]; }),borderColor:'#22c55e',fill:false,tension:0.4,pointRadius:4,borderWidth:2.5}
+  ]},options:lOpts(6,10)});
+  mk('cPart',{type:'bar',data:{labels:labs,datasets:[
+    {label:'3 дня',data:MONTHS.map(function(m){ return D.respondents['3_days'][m]&&D.respondents['3_days'][m].ALL||0; }),backgroundColor:'#8b5cf6',borderRadius:4},
+    {label:'1 месяц',data:MONTHS.map(function(m){ return D.respondents['1_month'][m]&&D.respondents['1_month'][m].ALL||0; }),backgroundColor:'#3b82f6',borderRadius:4},
+    {label:'Финал',data:MONTHS.map(function(m){ return D.respondents['final'][m]&&D.respondents['final'][m].ALL||0; }),backgroundColor:'#22c55e',borderRadius:4}
+  ]},options:bOpts(0,undefined)});
+  mk('cFinMet',{type:'bar',data:{labels:labs,datasets:[
+    {label:'Адаптация',data:MONTHS.map(function(m){ return D.scores.onboarding_score[m]; }),backgroundColor:'#6366f1',borderRadius:3},
+    {label:'Рабочие обяз.',data:MONTHS.map(function(m){ return D.scores.job_satisfaction[m]; }),backgroundColor:'#14b8a6',borderRadius:3},
+    {label:'Ожидания',data:MONTHS.map(function(m){ return D.scores.expectations[m]; }),backgroundColor:'#f97316',borderRadius:3},
+    {label:'Техника/ПО',data:MONTHS.map(function(m){ return D.scores.tech_mastery[m]; }),backgroundColor:'#3b82f6',borderRadius:3}
+  ]},options:bOpts(5,10)});
+}
+
+function build3D() {
+  donut('c3dMeet',getChoices('manager_meeting_3d','ALL','ALL'));
+  donut('c3dTask',getChoices('tasks_clear_3d','ALL','ALL'));
+  donut('c3dDocs',getChoices('docs_known_3d','ALL','ALL'));
+  mk('c3dSatT',{type:'line',data:{labels:labs,datasets:[{label:'Оценка',data:MONTHS.map(function(m){ return D.scores.satisfaction_3d[m]; }),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.1)',fill:true,tension:0.4,pointRadius:5,borderWidth:2.5}]},options:lOpts(6,10,false)});
+  rc('manager_3d','ALL',document.querySelector('#tab3dMgr .ct2'),'tab3dMgr','cl3dMgr');
+  rc('comments_3d','ALL',document.querySelector('#tab3dComm .ct2'),'tab3dComm','cl3dComm');
+}
+
+function build1M() {
+  donut('c1mGoals',getChoices('goals_set_1m','ALL','ALL'));
+  donut('c1mTasks',getChoices('tasks_on_time_1m','ALL','ALL'));
+  donut('c1mCont',getChoices('knows_contacts_1m','ALL','ALL'));
+  donut('c1mFb',getChoices('feedback_1m','ALL','ALL'));
+  donut('c1m1on1',getChoices('1on1_1m','ALL','ALL'));
+  donut('c1mMeet',getChoices('meeting_1m','ALL','ALL'));
+  mk('c1mBC',{type:'line',data:{labels:labs,datasets:[
+    {label:'Бадди',data:MONTHS.map(function(m){ return D.scores.buddy_1m[m]; }),borderColor:'#6366f1',fill:false,tension:0.4,pointRadius:5,borderWidth:2},
+    {label:'Курсы',data:MONTHS.map(function(m){ return D.scores.courses_1m[m]; }),borderColor:'#f59e0b',fill:false,tension:0.4,pointRadius:5,borderWidth:2}
+  ]},options:lOpts(5,10)});
+  mk('c1mSatT',{type:'line',data:{labels:labs,datasets:[{label:'Оценка',data:MONTHS.map(function(m){ return D.scores.satisfaction_1m[m]; }),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true,tension:0.4,pointRadius:5,borderWidth:2.5}]},options:lOpts(6,10,false)});
+  rc('add_remove_1m','ALL',document.querySelector('#tab1mCrs .ct2'),'tab1mCrs','cl1mCrs');
+  rc('difficulties_1m','ALL',document.querySelector('#tab1mDiff .ct2'),'tab1mDiff','cl1mDiff');
+}
+
+function buildFIN() {
+  mk('cFinENPS',{type:'line',data:{labels:labs,datasets:[{label:'eNPS',data:MONTHS.map(function(m){ return D.enps_series[m]?D.enps_series[m].enps:null; }),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',fill:true,tension:0.4,pointRadius:5,borderWidth:2.5}]},options:lOpts(0,100,false)});
+  mk('cFinScores',{type:'line',data:{labels:labs,datasets:[
+    {label:'Нравится компания',data:MONTHS.map(function(m){ return D.scores.satisfaction_fin[m]; }),borderColor:'#22c55e',fill:false,tension:0.4,pointRadius:4,borderWidth:2},
+    {label:'Адаптация',data:MONTHS.map(function(m){ return D.scores.onboarding_score[m]; }),borderColor:'#6366f1',fill:false,tension:0.4,pointRadius:4,borderWidth:2},
+    {label:'Рабочие обяз.',data:MONTHS.map(function(m){ return D.scores.job_satisfaction[m]; }),borderColor:'#14b8a6',fill:false,tension:0.4,pointRadius:4,borderWidth:2},
+    {label:'Ожидания',data:MONTHS.map(function(m){ return D.scores.expectations[m]; }),borderColor:'#f97316',fill:false,tension:0.4,pointRadius:4,borderWidth:2},
+    {label:'Техника/ПО',data:MONTHS.map(function(m){ return D.scores.tech_mastery[m]; }),borderColor:'#8b5cf6',fill:false,tension:0.4,pointRadius:4,borderWidth:2}
+  ]},options:lOpts(5,10)});
+  donut('cFinTask',getChoices('tasks_on_time_fin','ALL','ALL'));
+  donut('cFinFb',getChoices('feedback_fin','ALL','ALL'));
+  donut('cFin1on1',getChoices('1on1_fin','ALL','ALL'));
+  donut('cFinCont',getChoices('knows_contacts_fin','ALL','ALL'));
+  donut('cFinMgr',getChoices('manager_comfort_fin','ALL','ALL'));
+  mk('cFinBud',{type:'line',data:{labels:labs,datasets:[
+    {label:'Бадди 1 мес',data:MONTHS.map(function(m){ return D.scores.buddy_1m[m]; }),borderColor:'#6366f1',fill:false,tension:0.4,pointRadius:4,borderWidth:2,borderDash:[4,3]},
+    {label:'Бадди финал',data:MONTHS.map(function(m){ return D.scores.buddy_fin[m]; }),borderColor:'#22c55e',fill:false,tension:0.4,pointRadius:4,borderWidth:2}
+  ]},options:lOpts(5,10)});
+  rc('what_helped','ALL',document.querySelector('#tabHelped .ct2'),'tabHelped','clHelped');
+  rc('obstacles','ALL',document.querySelector('#tabObst .ct2'),'tabObst','clObst');
+  rc('extra_proc','ALL',document.querySelector('#tabProc .ct2'),'tabProc','clProc');
+}
+
+function buildTab(id) {
+  if(id==='ov') buildOV();
+  else if(id==='3d') build3D();
+  else if(id==='1m') build1M();
+  else if(id==='fin') buildFIN();
+}
+
+function upd() {
+  var m=gM(), d=gD();
+  document.getElementById('b3d').textContent=resp('3_days',m,d)||'0';
+  document.getElementById('b1m').textContent=resp('1_month',m,d)||'0';
+  document.getElementById('bfin').textContent=resp('final',m,d)||'0';
+  renderENPS('ovENPS','ovENPSD','ovENPSB',m,d);
+  document.getElementById('ovC3d').textContent=resp('3_days',m,d)||'—';
+  document.getElementById('ovC1m').textContent=resp('1_month',m,d)||'—';
+  document.getElementById('ovCFin').textContent=resp('final',m,d)||'—';
+  var s3=getScore('satisfaction_3d',m,d),s1=getScore('satisfaction_1m',m,d),sf=getScore('satisfaction_fin',m,d);
+  document.getElementById('ovS3d').textContent=fmt(s3,10);
+  document.getElementById('ovS1m').textContent=fmt(s1,10);
+  document.getElementById('ovSFin').textContent=fmt(sf,10);
+  document.getElementById('ovSt3d').textContent=strs(s3,10);
+  document.getElementById('ovSt1m').textContent=strs(s1,10);
+  document.getElementById('ovStFin').textContent=strs(sf,10);
+  var onb=getScore('onboarding_score',m,d),job=getScore('job_satisfaction',m,d),team=getScore('team_feel',m,d),exp=getScore('expectations',m,d);
+  document.getElementById('ovOnb').textContent=fmt(onb,10);
+  document.getElementById('ovJob').textContent=fmt(job,10);
+  document.getElementById('ovTeam').textContent=fmt(team,5);
+  document.getElementById('ovExp').textContent=fmt(exp,10);
+  // 3d
+  document.getElementById('k3dN').textContent=resp('3_days',m,d)||'—';
+  document.getElementById('k3dSat').textContent=fmt(s3,10);
+  document.getElementById('k3dSatSt').textContent=strs(s3,10);
+  var cm=getChoices('manager_meeting_3d',m,d),ct=getChoices('tasks_clear_3d',m,d);
+  var tm=Object.values(cm).reduce(function(a,b){ return a+b; },0)||1;
+  var tt=Object.values(ct).reduce(function(a,b){ return a+b; },0)||1;
+  document.getElementById('k3dMeet').innerHTML='<span style="font-size:28px;font-weight:800;color:var(--c3d)">'+Math.round((cm['Да']||0)/tm*100)+'%</span> <span style="font-size:11px;color:var(--text2)">ответили «Да»</span>';
+  document.getElementById('k3dTask').innerHTML='<span style="font-size:28px;font-weight:800;color:var(--c3d)">'+Math.round((ct['Да']||0)/tt*100)+'%</span> <span style="font-size:11px;color:var(--text2)">ответили «Да»</span>';
+  // 1m
+  document.getElementById('k1mN').textContent=resp('1_month',m,d)||'—';
+  document.getElementById('k1mSat').textContent=fmt(s1,10);
+  document.getElementById('k1mSatSt').textContent=strs(s1,10);
+  var b1=getScore('buddy_1m',m,d),crs=getScore('courses_1m',m,d);
+  document.getElementById('k1mBud').textContent=fmt(b1,10);
+  document.getElementById('k1mBudSt').textContent=strs(b1,10);
+  document.getElementById('k1mCrs').textContent=fmt(crs,10);
+  document.getElementById('k1mCrsSt').textContent=strs(crs,10);
+  // Final
+  renderENPS('fENPS','fENPSD','fENPSB',m,d);
+  document.getElementById('kFinN').textContent=resp('final',m,d)||'—';
+  document.getElementById('kFinSat').textContent=fmt(sf,10);
+  document.getElementById('kFinSatSt').textContent=strs(sf,10);
+  document.getElementById('kFinOnb').textContent=fmt(onb,10);
+  document.getElementById('kFinOnbSt').textContent=strs(onb,10);
+  document.getElementById('kFinJob').textContent=fmt(job,10);
+  document.getElementById('kFinJobSt').textContent=strs(job,10);
+  document.getElementById('kFinTeam').textContent=fmt(team,5);
+  document.getElementById('kFinTeamSt').textContent=team?strs(team,5):'';
+  document.getElementById('kFinExp').textContent=fmt(exp,10);
+  document.getElementById('kFinExpSt').textContent=strs(exp,10);
+  var tech=getScore('tech_mastery',m,d);
+  document.getElementById('kFinTech').textContent=fmt(tech,10);
+  document.getElementById('kFinTechSt').textContent=strs(tech,10);
+}
+
+var MN = {'ALL':'','2026-01':'Янв','2026-02':'Фев','2026-03':'Мар','2026-04':'Апр','2026-05':'Май'};
+function rc(key,month,btn,tabsId,listId) {
+  document.querySelectorAll('#'+tabsId+' .ct2').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  var el=document.getElementById(listId); if(!el)return;
+  var items=(D.open_answers[key]||[]).slice();
+  if(month!=='ALL') items=items.filter(function(c){ return c.month===month; });
+  if(!items.length){ el.innerHTML='<div style="text-align:center;color:#94a3b8;padding:16px;font-size:11px">Нет ответов</div>'; return; }
+  el.innerHTML=items.map(function(c){ return '<div class="ci"><div class="cm">'+(MN[c.month]||c.month)+' · '+c.dept+'</div>'+c.text+'</div>'; }).join('');
+}
+
+document.addEventListener('DOMContentLoaded',function() {
+  D.departments.forEach(function(d) {
+    var o=document.createElement('option'); o.value=d; o.textContent=d;
+    document.getElementById('fDept').appendChild(o);
+  });
+  buildOV(); built.add('ov');
+  upd();
+  document.getElementById('lastUpd').textContent='Обновлено: '+new Date().toLocaleDateString('ru-RU');
+  document.getElementById('fMonth').addEventListener('change',upd);
+  document.getElementById('fDept').addEventListener('change',upd);
+});
+
+</script>
+</body>
+</html>
